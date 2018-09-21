@@ -48,7 +48,7 @@ public class ReliantRestClient {
     }
 
     /**
-     * Execute.
+     * Execute the provided function with RestTemplate as an argument.
      *
      * @param <T> the generic type
      * @param function the function
