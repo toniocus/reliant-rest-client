@@ -1,0 +1,29 @@
+{
+   "obj01" : {
+    "att01": "val0101",
+    "att02": "val0102",
+    "att03": "val0103",
+    "att04": "value"
+   },
+
+   "obj02" : {
+    "att01": "val0201",
+    "att02": "val0202",
+    "att03": "val0203",
+    "att04": "value"
+   },
+   
+   "list" : [{
+        "att01": "val0201",
+        "att02": "val0202",
+        "att03": "val0203",
+        "att04": "value"
+       }
+       , {
+        "att01": "val0101",
+        "att02": "val0102",
+        "att03": "val0103",
+        "att04": "value"
+       }
+   ]
+}

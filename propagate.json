@@ -1,0 +1,10 @@
+[{
+   "source_attr_name" : "Huawei Subscriber ID"
+   , "source_attr_code" : "XOM_HW_SUB"
+   , "source_type" : "Attribute"
+   
+   , "destination_attr_name" : "Suscripcion ID"
+   , "destination_attr_code" : "FAN_ATT_000082"
+   
+   , "mapping-type" : "ad-verbatim"
+}]
