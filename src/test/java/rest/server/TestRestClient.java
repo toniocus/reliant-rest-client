@@ -24,6 +24,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import rest.client.ReliantRestClientInterceptor;
+
 /**
  * DOCUMENT .
  * @author tonioc
@@ -122,8 +124,6 @@ public class TestRestClient {
         catch (HttpClientErrorException ex) {
 
             System.out.println("Error Response: " + ex.getResponseBodyAsString());
-
-            // No way to get the original message from this exception.
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -151,7 +151,7 @@ public class TestRestClient {
             rt.setInterceptors(interceptors);
         }
 
-        interceptors.add(new RestClientInterceptor());
+        interceptors.add(new ReliantRestClientInterceptor());
 
         return rt;
     }

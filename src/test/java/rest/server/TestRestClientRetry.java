@@ -10,7 +10,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.classify.SubclassClassifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -30,6 +29,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+
+import rest.client.ReliantRestClientInterceptor;
 
 /**
  * DOCUMENT .
@@ -162,54 +163,6 @@ public class TestRestClientRetry {
         return policy;
     }
 
-    public static class RestClientClassifier extends SubclassClassifier<Throwable, RetryPolicy> {
-
-        private SimpleRetryPolicy simple3 = new SimpleRetryPolicy(3);
-
-        /**
-         * Constructor.
-         */
-        public RestClientClassifier() {
-            super();
-        }
-
-        /**
-         * Constructor.
-         * @param pTypeMap
-         * @param pDefaultValue
-         */
-        public RestClientClassifier(final Map<Class<? extends Throwable>, RetryPolicy> pTypeMap) {
-            super(pTypeMap, new SimpleRetryPolicy(0));
-        }
-
-        /**
-         * Constructor.
-         * @param pDefaultValue
-         */
-        public RestClientClassifier(final RetryPolicy pDefaultValue) {
-            super(new SimpleRetryPolicy(0));
-        }
-
-
-        @Override
-        public RetryPolicy classify(final Throwable classifiable) {
-
-            RetryPolicy retryp = super.classify(classifiable);
-
-            if (classifiable instanceof ResourceAccessException) {
-
-                boolean connTO = classifiable.getMessage().toLowerCase().contains("connect timed out");
-
-                if (connTO) {
-                    retryp =  this.simple3;
-                }
-            }
-
-            return retryp;
-        }
-
-    }
-
     private RestTemplate createRestTemplate(final int readTimeoutInMillis)  {
 
         SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
@@ -228,7 +181,7 @@ public class TestRestClientRetry {
             rt.setInterceptors(interceptors);
         }
 
-        interceptors.add(new RestClientInterceptor());
+        interceptors.add(new ReliantRestClientInterceptor());
 
         return rt;
     }
