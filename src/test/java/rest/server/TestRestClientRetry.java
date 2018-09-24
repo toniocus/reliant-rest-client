@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
-import rest.client.ReliantRestClientInterceptor;
+import rest.client.basic.ReliantRestClientInterceptor;
 
 /**
  * DOCUMENT .

@@ -1,4 +1,4 @@
-package rest.client;
+package rest.client.basic;
 
 import java.util.Map;
 
@@ -12,6 +12,7 @@ import org.springframework.web.client.ResourceAccessException;
  */
 public class ReliantRestClientClassifier extends SubclassClassifier<Throwable, RetryPolicy> {
 
+    private static final long serialVersionUID = -8147985442831528565L;
     private SimpleRetryPolicy simple3 = new SimpleRetryPolicy(3);
 
     /**

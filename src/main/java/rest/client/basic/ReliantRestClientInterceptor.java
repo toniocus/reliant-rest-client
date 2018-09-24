@@ -1,4 +1,4 @@
-package rest.client;
+package rest.client.basic;
 
 import java.io.IOException;
 
