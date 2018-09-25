@@ -6,14 +6,16 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 
-import rest.client.strict.ReliantRestClient;
+import rest.client.strict.StrictRestClient;
 
-public class TestReliantConnectTimeout {
+public class ConnectTimeoutTest extends Assert {
 
     private static ServerSocket serverSocket;
 
@@ -38,19 +40,27 @@ public class TestReliantConnectTimeout {
     }
 
     @Test
-    public void testConnect() throws IOException, RestClientException, URISyntaxException {
+    @Ignore("Ignored because the time it takes, comment out to try")
+    public void testConnectTimeout() throws IOException, RestClientException, URISyntaxException {
+
+        long start = 0L, stop = 0L;
 
         try {
-            ReliantRestClient rrc = new ReliantRestClient();
+            StrictRestClient rrc = new StrictRestClient(5_000, 0);
 
+            start = System.currentTimeMillis();
             ResponseEntity<String> result = rrc
                     .execute(rt -> rt.getForEntity("http://10.255.255.1", String.class));
 
             System.out.println("Recived message: " +  result.getBody());
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            stop = System.currentTimeMillis();
+            assertTrue("connect time out",  ex.getMessage().contains("connect timed out"));
         }
+
+        assertTrue("Exception thrown", stop > 0);
+        assertTrue("Retries occured", (stop - start) > 5_000 * 3);
 
     }
 

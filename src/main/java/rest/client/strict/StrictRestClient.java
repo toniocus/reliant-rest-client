@@ -32,24 +32,40 @@ import rest.client.basic.ReliantRestClientClassifier;
 import rest.client.basic.ReliantRetryCallback;
 
 /**
- * The Class ReliaRestClient.
+ * StrictRestClient a wrapper over RestTemplate with standard retry policies and timeout periods,
+ * and throws exception if HttpStatus 3xx is received.
+ *
+ * <h2>Simple use:</h2>
+ * <pre>
+ * {@code
+ * ....
+ *    // Construct with default timeouts
+ *    StrictRestClient strictRest = new StrictRestClient();
+ *
+ *    // call your restemplate method as a lamba.
+ *    ResponseEntity<String> result = strictRest
+ *          .execute(restTemplate -> restTemplate.getForEntity("http://localhost:9090/status100", String.class));
+ *
+ * ....
+ * }
+ * </pre>
  *
  * <h2>Handled Exceptions:</h2>
  *
  * <ol>
- * <li>ResourceAccessException - connect timeout
- * <li>ResourceAccessException - read timeout
- * <li>HttpMessageNotReadableException - When transformation to the destination type fails.
- * <li>HttpClientErrorException - Status 4xx
- * <li>HttpServerErrorException - Status 5xx (special management of 503 retry after ????)
- * <li>HttpNot2xxStatusCodeException - Status 1xx or 3xxx
- * <li>UnknownHttpStatusCodeException - Custom or Unknown StatusCode ????
- * <li>RestClientException
+ * <li>ResourceAccessException - connect timeout (3 retries)
+ * <li>ResourceAccessException - I/O or read timeout (0 retries)
+ * <li>HttpMessageNotReadableException - ex. Json parse error, (0 retries and logs original message)
+ * <li>HttpClientErrorException - (0 retries)
+ * <li>HttpServerErrorException - (0 retries)
+ * <li>HttpNot2xxStatusCodeException - Status not 2xx, 4xx, 5xx (0 retries)
+ * <li>UnknownHttpStatusCodeException - Custom or Unknown StatusCode (0 retries)
+ * <li>RestClientException - (0 retries)
  * </ol>
  */
-public class ReliantRestClient {
+public class StrictRestClient {
 
-    static Logger log = LoggerFactory.getLogger(ReliantRestClient.class);
+    static Logger log = LoggerFactory.getLogger(StrictRestClient.class);
 
     /**
      * The Constant DEFAULT_CONNECT_TIMEOUT_IN_MILLIS = {@value #DEFAULT_CONNECT_TIMEOUT_IN_MILLIS}.
@@ -66,28 +82,28 @@ public class ReliantRestClient {
     private int readTimeout;
 
     /**
-     * Constructor with defaults.
+     * Constructor with default timeouts.
      */
-    public ReliantRestClient() {
+    public StrictRestClient() {
         this(0,0);
     }
 
     /**
-     * Instantiates a new reliant rest client.
+     * Instantiates a new reliant rest client, with readTimeout and default connectionTimeout.
      *
-     * @param readTimeout the read timeout
+     * @param readTimeout the read timeout, if less or equal 0 default will be used.
      */
-    public ReliantRestClient(final int readTimeout) {
+    public StrictRestClient(final int readTimeout) {
         this(0, readTimeout);
     }
 
     /**
-     * Instantiates a new reliant rest client.
+     * Instantiates a new reliant rest client, with connect and read timeout.
      *
-     * @param connectTimeout the connect timeout
-     * @param readTimeout the read timeout
+     * @param connectTimeout the connect timeout, if less or equal 0 default will be used.
+     * @param readTimeout the read timeout, if less or equal 0 default will be used.
      */
-    public ReliantRestClient(final int connectTimeout, final int readTimeout) {
+    public StrictRestClient(final int connectTimeout, final int readTimeout) {
         this.connectTimeout = (connectTimeout <= 0 ? DEFAULT_CONNECT_TIMEOUT_IN_MILLIS : connectTimeout);
         this.readTimeout = (readTimeout <= 0 ? DEFAULT_READ_TIMEOUT_IN_MILLIS : readTimeout);
         this.rtContext = createRestTemplateContext(this.connectTimeout, this.readTimeout);
@@ -104,7 +120,7 @@ public class ReliantRestClient {
     }
 
     /**
-     * Execute the provided function with RestTemplate as an argument.
+     * Execute the provided lambda function that recieves {@link RestTemplate} as an argument.
      *
      * @param <T> the generic type
      * @param function the function
@@ -148,7 +164,7 @@ public class ReliantRestClient {
     }
 
     /**
-     * Create rest template context
+     * Create rest template context.
      *
      * @param connectTimeoutInMillis the connect timeout in millis
      * @param readTimeoutInMillis the read timeout in millis
@@ -210,8 +226,11 @@ public class ReliantRestClient {
                 boolean connTO = th.getMessage().toLowerCase().contains("connect timed out");
 
                 if (!connTO) {
+                    // Really not sure if this is good, although it currently works
+                    // seems the state of the retry is kept in retry context.
                     return neverRetry;
                 }
+
             }
             else if (th instanceof HttpMessageNotReadableException) {
 

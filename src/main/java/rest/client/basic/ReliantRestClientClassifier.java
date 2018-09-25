@@ -19,9 +19,9 @@ public class ReliantRestClientClassifier extends SubclassClassifier<Throwable, R
      * Instantiates a new reliant rest client classifier.
      *
      * <P>The classifierFunction recieves the last thrown Exception as the 1st. argument,
-     * and the RetryPolicy configured in the typeMap as 2nd. argument if you want
-     * and it should return the same or a other retry policy and do whatever you need to do
-     * with it.
+     * and the RetryPolicy configured in the typeMap as 2nd. argument.
+     * <br> It should return the same or a other retry policy and do whatever you need to do
+     * with the exception you received.
      *
      * @param typeMap the type map
      * @param classifierFuncion the classifier funcion, may be null.

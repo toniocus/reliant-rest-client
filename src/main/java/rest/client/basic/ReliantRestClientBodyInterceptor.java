@@ -40,6 +40,7 @@ public class ReliantRestClientBodyInterceptor implements ClientHttpRequestInterc
             , final ClientHttpRequestExecution execution) throws IOException {
 
         ClientHttpResponse response = execution.execute(request, body);
+        this.responseBody = null;
         this.responseBody = IOUtils.toByteArray(response.getBody());
         this.charset = getCharset(response);
 
@@ -63,6 +64,10 @@ public class ReliantRestClientBodyInterceptor implements ClientHttpRequestInterc
      * @return the response body as string
      */
     public String getResponseBodyAsString() {
+
+        if (this.responseBody == null) {
+            return "";
+        }
 
         try {
             return new String(this.responseBody, this.charset);
