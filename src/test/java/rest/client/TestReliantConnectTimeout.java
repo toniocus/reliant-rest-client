@@ -9,13 +9,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import rest.client.strict.ReliantRestClient;
 
-public class ReliantConnectTimeoutTest {
+public class TestReliantConnectTimeout {
 
     private static ServerSocket serverSocket;
 
@@ -43,7 +41,7 @@ public class ReliantConnectTimeoutTest {
     public void testConnect() throws IOException, RestClientException, URISyntaxException {
 
         try {
-            ReliantRestClient rrc = new ReliantRestClient(5_000, 0);
+            ReliantRestClient rrc = new ReliantRestClient();
 
             ResponseEntity<String> result = rrc
                     .execute(rt -> rt.getForEntity("http://10.255.255.1", String.class));
@@ -54,14 +52,6 @@ public class ReliantConnectTimeoutTest {
             ex.printStackTrace();
         }
 
-    }
-
-    private RestTemplate createRestTemplate(final long readTimeoutInMillis)  {
-
-        SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
-        simpleClientHttpRequestFactory.setConnectTimeout(5000);
-        simpleClientHttpRequestFactory.setReadTimeout(5000);
-        return new RestTemplate(simpleClientHttpRequestFactory);
     }
 
 }

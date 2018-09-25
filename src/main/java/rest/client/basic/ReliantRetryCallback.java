@@ -39,8 +39,12 @@ import org.springframework.web.client.RestTemplate;
     public ResponseEntity<T> doWithRetry(final RetryContext context) throws RuntimeException {
 
         if (context.getRetryCount() > 0) {
-            log.info("Retrying connect #" + context.getRetryCount());
+            log.info("Retry #" + context.getRetryCount()
+                    +  " caused by: "
+                    +  (context.getLastThrowable() == null ? "Unknown Reason" : context.getLastThrowable().toString())
+                    );
         }
+
         return this.function.apply(this.rt);
     }
  }

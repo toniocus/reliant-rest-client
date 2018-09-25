@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
-import rest.client.basic.ReliantRestClientInterceptor;
+import rest.client.basic.ReliantRestClientBodyInterceptor;
 
 /**
  * DOCUMENT .
@@ -181,7 +181,7 @@ public class TestRestClientRetry {
             rt.setInterceptors(interceptors);
         }
 
-        interceptors.add(new ReliantRestClientInterceptor());
+        interceptors.add(new ReliantRestClientBodyInterceptor());
 
         return rt;
     }

@@ -1,7 +1,10 @@
 package rest.client.strict;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.Validate;
@@ -11,14 +14,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.retry.RetryPolicy;
+import org.springframework.retry.backoff.BackOffPolicy;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.policy.ExceptionClassifierRetryPolicy;
+import org.springframework.retry.policy.NeverRetryPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
-import rest.client.basic.ReliantRestClientInterceptor;
-import rest.client.basic.ReliantRestClientUtil;
+import rest.client.basic.ReliantRestClientBodyInterceptor;
+import rest.client.basic.ReliantRestClientClassifier;
 import rest.client.basic.ReliantRetryCallback;
 
 /**
@@ -71,6 +81,16 @@ public class ReliantRestClient {
         this(0, readTimeout);
     }
 
+
+    /**
+     * Gets the rest template context.
+     *
+     * @return the rest template context
+     */
+    protected RestTemplateContext getRestTemplateContext() {
+        return this.rtContext;
+    }
+
     /**
      * Instantiates a new reliant rest client.
      *
@@ -94,17 +114,10 @@ public class ReliantRestClient {
 
         Validate.notNull(function, "Function argument should not be null");
 
-        RetryPolicy policy = ReliantRestClientUtil.createRetryPolicy();
-
-        ExponentialBackOffPolicy bop = new ExponentialBackOffPolicy();
-        bop.setMultiplier(3);
-        bop.setMaxInterval(150_000L);
-        bop.setInitialInterval((this.connectTimeout < 20_0000 ? 30_000 : 45_000));
-
         // Use the policy...
         RetryTemplate template = new RetryTemplate();
-        template.setRetryPolicy(policy);
-        template.setBackOffPolicy(bop);
+        template.setRetryPolicy(createRetryPolicy());
+        template.setBackOffPolicy(createBackOffPolicy());
 
         ReliantRetryCallback<T> rcc = new ReliantRetryCallback<>(this.rtContext.restTemplate, function);
 
@@ -128,8 +141,8 @@ public class ReliantRestClient {
      * The Class RestTemplateContext.
      */
     protected static class RestTemplateContext {
-        RestTemplate restTemplate;
-        ReliantRestClientInterceptor interceptor;
+        public RestTemplate restTemplate;
+        public ReliantRestClientBodyInterceptor bodyInterceptor;
 
     }
 
@@ -148,10 +161,14 @@ public class ReliantRestClient {
         simpleClientHttpRequestFactory.setConnectTimeout(connectTimeoutInMillis);
         simpleClientHttpRequestFactory.setReadTimeout(readTimeoutInMillis);
 
+        // We need this to let the body interceptor read the body request
+        // without exhausting the input stream.
         BufferingClientHttpRequestFactory buffReqFactory =
                 new BufferingClientHttpRequestFactory(simpleClientHttpRequestFactory);
 
+
         RestTemplate rt = new RestTemplate(buffReqFactory);
+        ReliantRestClientBodyInterceptor interceptor = new ReliantRestClientBodyInterceptor();
         rt.setErrorHandler(new StrictResponseErrorHandler());
 
         // Add interceptor
@@ -161,14 +178,70 @@ public class ReliantRestClient {
             rt.setInterceptors(interceptors);
         }
 
-        ReliantRestClientInterceptor interceptor = new ReliantRestClientInterceptor();
         interceptors.add(interceptor);
 
         RestTemplateContext ctx = new RestTemplateContext();
-        ctx.interceptor = interceptor;
+        ctx.bodyInterceptor = interceptor;
         ctx.restTemplate = rt;
 
         return ctx;
     }
 
+    /**
+     * Create retry policy.
+     *
+     * @return the retry policy
+     */
+    public RetryPolicy createRetryPolicy() {
+
+        RetryPolicy retry3 = new SimpleRetryPolicy(3);
+        RetryPolicy neverRetry = new NeverRetryPolicy();
+
+        Map<Class<? extends Throwable>, RetryPolicy> map = new HashMap<>();
+        map.put(ResourceAccessException.class, retry3);
+        map.put(RestClientResponseException.class, neverRetry);
+        map.put(HttpMessageNotReadableException.class, neverRetry);
+
+        BiFunction<Throwable, RetryPolicy, RetryPolicy> classifier = ( (th, rp) ->  {
+
+            if (th instanceof ResourceAccessException) {
+
+                boolean connTO = th.getMessage().toLowerCase().contains("connect timed out");
+
+                if (!connTO) {
+                    return neverRetry;
+                }
+            }
+            else if (th instanceof HttpMessageNotReadableException) {
+
+                // if we do not do this, the body of the original message is lost
+                // and we will not be able to see it.
+                log.error("Message cannot be converted to expected type: "
+                        + getRestTemplateContext().bodyInterceptor.getResponseBodyAsString()
+                        );
+            }
+
+            return rp;
+        });
+
+        ExceptionClassifierRetryPolicy policy = new ExceptionClassifierRetryPolicy();
+        policy.setExceptionClassifier(new ReliantRestClientClassifier(map, classifier));
+
+        return policy;
+    }
+
+    /**
+     * Create back off policy.
+     *
+     * @return the back off policy
+     */
+    public BackOffPolicy createBackOffPolicy() {
+
+        ExponentialBackOffPolicy bop = new ExponentialBackOffPolicy();
+        bop.setMultiplier(2);
+        bop.setMaxInterval(150_000L);
+        bop.setInitialInterval(20_000L);
+
+        return bop;
+    }
 }

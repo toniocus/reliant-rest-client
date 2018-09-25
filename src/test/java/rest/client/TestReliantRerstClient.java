@@ -25,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import rest.client.basic.ReliantRestClientInterceptor;
+import rest.client.basic.ReliantRestClientBodyInterceptor;
 import rest.client.strict.ReliantRestClient;
 
 /**
@@ -67,7 +67,7 @@ public class TestReliantRerstClient {
 
 
         try {
-            ReliantRestClient rrc = new ReliantRestClient(5);
+            ReliantRestClient rrc = new ReliantRestClient();
 
             ResponseEntity<JsonNode> result = rrc
                     .execute(rt -> rt.getForEntity("http://localhost:9090/noJson", JsonNode.class));
@@ -80,11 +80,27 @@ public class TestReliantRerstClient {
     }
 
     @Test
-    public void testStatus100() throws Exception {
+    public void testStatus300() throws Exception {
 
 
         try {
             ReliantRestClient rrc = new ReliantRestClient(50_000);
+
+            ResponseEntity<String> result = rrc
+                    .execute(rt -> rt.getForEntity("http://localhost:9090/status300", String.class));
+
+            System.out.println("Recived message: " +  result.getBody());
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testStatus100() throws Exception {
+
+        try {
+            ReliantRestClient rrc = new ReliantRestClient(10_000);
 
             ResponseEntity<String> result = rrc
                     .execute(rt -> rt.getForEntity("http://localhost:9090/status100", String.class));
@@ -152,7 +168,7 @@ public class TestReliantRerstClient {
             rt.setInterceptors(interceptors);
         }
 
-        interceptors.add(new ReliantRestClientInterceptor());
+        interceptors.add(new ReliantRestClientBodyInterceptor());
 
         return rt;
     }

@@ -1,9 +1,13 @@
 package rest.client.basic;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
@@ -16,9 +20,10 @@ import org.springframework.http.client.ClientHttpResponse;
  * getBody() InputStream is not traversed here, and lost during the next phase of processing.
  *
  */
-public class ReliantRestClientInterceptor implements ClientHttpRequestInterceptor {
+public class ReliantRestClientBodyInterceptor implements ClientHttpRequestInterceptor {
 
     private byte[] responseBody;
+    private Charset charset;
 
     /**
      * Intercept and store the message in this instance.
@@ -36,6 +41,8 @@ public class ReliantRestClientInterceptor implements ClientHttpRequestIntercepto
 
         ClientHttpResponse response = execution.execute(request, body);
         this.responseBody = IOUtils.toByteArray(response.getBody());
+        this.charset = getCharset(response);
+
         return response;
     }
 
@@ -47,6 +54,37 @@ public class ReliantRestClientInterceptor implements ClientHttpRequestIntercepto
      */
     public byte[] getResponseBody() {
         return this.responseBody;
+    }
+
+    /**
+     * Gets the response body as string, if not able to convert to String will send
+     * the byte array.
+     *
+     * @return the response body as string
+     */
+    public String getResponseBodyAsString() {
+
+        try {
+            return new String(this.responseBody, this.charset);
+        }
+        catch (Exception ex) {
+            // Not able to transform to String,  send bytes
+            return "Cannot convert byte[] to String, hera are the bytes: " + Arrays.toString(this.responseBody);
+        }
+
+    }
+
+    /**
+     * Gets the charset.
+     *
+     * @param message the message
+     * @return the charset
+     */
+    private static Charset getCharset(final ClientHttpResponse message)
+    {
+        return Optional.ofNullable(message.getHeaders().getContentType())
+            .map(MediaType::getCharset)
+            .orElse(Charset.defaultCharset());
     }
 
 }
