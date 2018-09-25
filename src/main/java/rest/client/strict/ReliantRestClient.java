@@ -81,16 +81,6 @@ public class ReliantRestClient {
         this(0, readTimeout);
     }
 
-
-    /**
-     * Gets the rest template context.
-     *
-     * @return the rest template context
-     */
-    protected RestTemplateContext getRestTemplateContext() {
-        return this.rtContext;
-    }
-
     /**
      * Instantiates a new reliant rest client.
      *
@@ -101,6 +91,16 @@ public class ReliantRestClient {
         this.connectTimeout = (connectTimeout <= 0 ? DEFAULT_CONNECT_TIMEOUT_IN_MILLIS : connectTimeout);
         this.readTimeout = (readTimeout <= 0 ? DEFAULT_READ_TIMEOUT_IN_MILLIS : readTimeout);
         this.rtContext = createRestTemplateContext(this.connectTimeout, this.readTimeout);
+    }
+
+
+    /**
+     * Gets the rest template context.
+     *
+     * @return the rest template context
+     */
+    protected RestTemplateContext getRestTemplateContext() {
+        return this.rtContext;
     }
 
     /**
@@ -119,7 +119,8 @@ public class ReliantRestClient {
         template.setRetryPolicy(createRetryPolicy());
         template.setBackOffPolicy(createBackOffPolicy());
 
-        ReliantRetryCallback<T> rcc = new ReliantRetryCallback<>(this.rtContext.restTemplate, function);
+        ReliantRetryCallback<T> rcc =
+                new ReliantRetryCallback<>(getRestTemplateContext().restTemplate, function);
 
         try {
             return template.execute(rcc);
@@ -214,11 +215,13 @@ public class ReliantRestClient {
             }
             else if (th instanceof HttpMessageNotReadableException) {
 
-                // if we do not do this, the body of the original message is lost
-                // and we will not be able to see it.
-                log.error("Message cannot be converted to expected type: "
-                        + getRestTemplateContext().bodyInterceptor.getResponseBodyAsString()
-                        );
+                if (getRestTemplateContext().bodyInterceptor != null) {
+                    // if we do not do this, the body of the original message is lost
+                    // and we will not be able to see it.
+                    log.error("Message cannot be converted to expected type: "
+                            + getRestTemplateContext().bodyInterceptor.getResponseBodyAsString()
+                            );
+                }
             }
 
             return rp;
