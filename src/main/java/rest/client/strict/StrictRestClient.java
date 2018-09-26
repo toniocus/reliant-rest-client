@@ -211,7 +211,7 @@ public class StrictRestClient {
      */
     public RetryPolicy createRetryPolicy() {
 
-        RetryPolicy retry3 = new SimpleRetryPolicy(3);
+        RetryPolicy retry3 = new SimpleRetryPolicy(4);
         RetryPolicy neverRetry = new NeverRetryPolicy();
 
         Map<Class<? extends Throwable>, RetryPolicy> map = new HashMap<>();
@@ -262,7 +262,7 @@ public class StrictRestClient {
         ExponentialBackOffPolicy bop = new ExponentialBackOffPolicy();
         bop.setMultiplier(2);
         bop.setMaxInterval(150_000L);
-        bop.setInitialInterval(20_000L);
+        bop.setInitialInterval(7_500L);
 
         return bop;
     }
