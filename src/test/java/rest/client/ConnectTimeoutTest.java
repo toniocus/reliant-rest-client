@@ -8,9 +8,10 @@ import java.net.URISyntaxException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.backoff.BackOffPolicy;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.web.client.RestClientException;
 
 import rest.client.strict.StrictRestClient;
@@ -40,13 +41,22 @@ public class ConnectTimeoutTest extends Assert {
     }
 
     @Test
-    @Ignore("Ignored because the time it takes, comment out to try")
+    //@Ignore("Ignored because the time it takes, comment out to try")
     public void testConnectTimeout() throws IOException, RestClientException, URISyntaxException {
 
         long start = 0L, stop = 0L;
 
         try {
-            StrictRestClient rrc = new StrictRestClient(5_000, 0);
+            StrictRestClient rrc = new StrictRestClient(2_000, 0) {
+                @Override
+                public BackOffPolicy createBackOffPolicy() {
+                    ExponentialBackOffPolicy bop = new ExponentialBackOffPolicy();
+                    bop.setMultiplier(2);
+                    bop.setMaxInterval(150_000L);
+                    bop.setInitialInterval(500L);
+                    return bop;
+                }
+            };
 
             start = System.currentTimeMillis();
             ResponseEntity<String> result = rrc
@@ -60,7 +70,7 @@ public class ConnectTimeoutTest extends Assert {
         }
 
         assertTrue("Exception thrown", stop > 0);
-        assertTrue("Retries occured", (stop - start) > 5_000 * 3);
+        assertTrue("Retries occured", (stop - start) > 2_000 * 3);
 
     }
 

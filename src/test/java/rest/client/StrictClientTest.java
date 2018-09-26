@@ -42,7 +42,7 @@ public class StrictClientTest extends Assert {
         long start = 0L, stop = 0L;
 
         try {
-            StrictRestClient rrc = new StrictRestClient(5);
+            StrictRestClient rrc = new StrictRestClient(500);
 
             start = System.currentTimeMillis();
             ResponseEntity<String> result = rrc
@@ -55,7 +55,7 @@ public class StrictClientTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 10_000);
+        assertTrue("Read time out",  (stop - start) < 500 * 2);
     }
 
     /**
@@ -93,7 +93,7 @@ public class StrictClientTest extends Assert {
 
 
         try {
-            StrictRestClient rrc = new StrictRestClient();
+            StrictRestClient rrc = new StrictRestClient(500);
 
             ResponseEntity<String> result = rrc
                     .execute(rt -> rt.getForEntity("http://localhost:9090/status300", String.class));
@@ -116,7 +116,7 @@ public class StrictClientTest extends Assert {
         long start = 0L, stop = 0L;
 
         try {
-            StrictRestClient rrc = new StrictRestClient(5_000);
+            StrictRestClient rrc = new StrictRestClient(500);
 
             start = System.currentTimeMillis();
             ResponseEntity<String> result = rrc
@@ -129,6 +129,29 @@ public class StrictClientTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 10_000);
+        assertTrue("Read time out",  (stop - start) < 500 * 3);
     }
+
+    @Test
+    public void testStatus102() throws Exception {
+
+        long start = 0L, stop = 0L;
+
+        try {
+            StrictRestClient rrc = new StrictRestClient(500);
+
+            start = System.currentTimeMillis();
+            ResponseEntity<String> result = rrc
+                    .execute(rt -> rt.getForEntity("http://localhost:9090/status102", String.class));
+
+            fail("No exception thrown");
+        }
+        catch (Exception ex) {
+            stop = System.currentTimeMillis();
+            assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
+        }
+
+        assertTrue("Read time out",  (stop - start) < 500 * 3);
+    }
+
 }

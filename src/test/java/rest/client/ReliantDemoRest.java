@@ -61,14 +61,21 @@ public class ReliantDemoRest {
     @ResponseBody
     public ResponseEntity<String> status100() throws InterruptedException {
         return ResponseEntity.status(HttpStatus.CONTINUE)
-                .body("<root><data>This is not a JSON</data></root>");
+                .body("<root><data>Continue</data></root>");
+    }
+
+    @RequestMapping(value = {"/status102"}, method = {RequestMethod.GET})
+    @ResponseBody
+    public ResponseEntity<String> status102() throws InterruptedException {
+        return ResponseEntity.status(HttpStatus.PROCESSING)
+                .body("<root><data>Processing</data></root>");
     }
 
     @RequestMapping(value = {"/status300"}, method = {RequestMethod.GET})
     @ResponseBody
     public ResponseEntity<String> status300() throws InterruptedException {
         return ResponseEntity.status(HttpStatus.PERMANENT_REDIRECT)
-                .body("<root><data>This is not a JSON</data></root>");
+                .body("<root><data>Redirect</data></root>");
     }
 
 }
