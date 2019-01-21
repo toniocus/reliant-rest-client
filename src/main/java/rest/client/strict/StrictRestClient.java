@@ -42,6 +42,10 @@ import rest.client.basic.ReliantRetryCallback;
  *    // Construct with default timeouts
  *    StrictRestClient strictRest = new StrictRestClient();
  *
+ *    // Customize underlying RestTemplate
+ *    RestTemplate rt = strictRest.getRestTemplate();
+ *    rt.whatever .....
+ *
  *    // call your restemplate method as a lamba.
  *    ResponseEntity<String> result = strictRest
  *          .execute(restTemplate -> restTemplate.getForEntity("http://localhost:9090/status100", String.class));
@@ -50,17 +54,27 @@ import rest.client.basic.ReliantRetryCallback;
  * }
  * </pre>
  *
- * <h2>Handled Exceptions:</h2>
+ * <h2>How Exceptions are handled (thrown by and while calling {@link #execute(Function)}):</h2>
  *
  * <ol>
- * <li>ResourceAccessException - connect timeout (3 retries)
- * <li>ResourceAccessException - I/O or read timeout (0 retries)
- * <li>HttpMessageNotReadableException - ex. Json parse error, (0 retries and logs original message)
- * <li>HttpClientErrorException - (0 retries)
- * <li>HttpServerErrorException - (0 retries)
- * <li>HttpNot2xxStatusCodeException - Status not 2xx, 4xx, 5xx (0 retries)
- * <li>UnknownHttpStatusCodeException - Custom or Unknown StatusCode (0 retries)
+ * <li>HttpMessageConversionException
+ * <ul>
+ *     <li>HttpMessageNotReadableException - ex. Json parse error, (0 retries and logs original message)
+ *     <li>HttpMessageNotWritableException - (0 retries)
+ * </ul></li>
+ *
  * <li>RestClientException - (0 retries)
+ * <ul>
+ *     <li>ResourceAccessException - connect timeout (3 retries)
+ *     <li>ResourceAccessException - I/O or read timeout (0 retries)
+ *     <li>RestClientResponseException <b>(contains body if present in the Response)</b>:
+ *     <ul>
+ *         <li>HttpClientErrorException - (0 retries)
+ *         <li>HttpServerErrorException - (0 retries)
+ *         <li>HttpNot2xxStatusCodeException - Status not 2xx, 4xx, 5xx (0 retries)
+ *         <li>UnknownHttpStatusCodeException - Custom or Unknown StatusCode (0 retries)
+ *     </ul></li>
+ * </ul></li>
  * </ol>
  */
 public class StrictRestClient {
@@ -109,7 +123,6 @@ public class StrictRestClient {
         this.rtContext = createRestTemplateContext(this.connectTimeout, this.readTimeout);
     }
 
-
     /**
      * Gets the rest template context.
      *
@@ -120,10 +133,21 @@ public class StrictRestClient {
     }
 
     /**
+     * Gets the underlying RestTemplate.
+     *
+     * @return the rest template
+     */
+    public RestTemplate getRestTemplate() {
+        return this.rtContext.restTemplate;
+    }
+
+    /**
      * Execute the provided lambda function that recieves {@link RestTemplate} as an argument.
      *
+     * @see StrictRestClient StrictRestClient for the exceptions thrown by this method.
      * @param <T> the generic type
-     * @param function the function
+     * @param function the function receiving a {@link RestTemplate} argument and returning a
+     *    ResponseEntity.
      * @return the response entity
      */
     public <T> ResponseEntity<T> execute(final Function<RestTemplate, ResponseEntity<T>> function) {
