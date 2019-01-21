@@ -91,7 +91,7 @@ public class StrictRestClient {
     /**
      * Instantiates a new reliant rest client, with readTimeout and default connectionTimeout.
      *
-     * @param readTimeout the read timeout, if less or equal 0 default will be used.
+     * @param readTimeout the read timeout, if less or equal 0 {@link #DEFAULT_READ_TIMEOUT_IN_MILLIS} will be used.
      */
     public StrictRestClient(final int readTimeout) {
         this(0, readTimeout);
@@ -100,8 +100,8 @@ public class StrictRestClient {
     /**
      * Instantiates a new reliant rest client, with connect and read timeout.
      *
-     * @param connectTimeout the connect timeout, if less or equal 0 default will be used.
-     * @param readTimeout the read timeout, if less or equal 0 default will be used.
+     * @param connectTimeout the connect timeout, if less or equal 0 {@link #DEFAULT_CONNECT_TIMEOUT_IN_MILLIS} will be used.
+     * @param readTimeout the read timeout, if less or equal 0 {@link #DEFAULT_READ_TIMEOUT_IN_MILLIS} will be used.
      */
     public StrictRestClient(final int connectTimeout, final int readTimeout) {
         this.connectTimeout = (connectTimeout <= 0 ? DEFAULT_CONNECT_TIMEOUT_IN_MILLIS : connectTimeout);
