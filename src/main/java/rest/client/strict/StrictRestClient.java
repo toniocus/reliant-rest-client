@@ -24,6 +24,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
@@ -96,7 +97,8 @@ public class StrictRestClient {
     private int readTimeout;
 
     /**
-     * Constructor with default timeouts.
+     * Constructor with default timeouts, {@link #DEFAULT_READ_TIMEOUT_IN_MILLIS} and
+     * {@link #DEFAULT_CONNECT_TIMEOUT_IN_MILLIS}.
      */
     public StrictRestClient() {
         this(0,0);
@@ -245,6 +247,8 @@ public class StrictRestClient {
 
         BiFunction<Throwable, RetryPolicy, RetryPolicy> classifier = ( (th, rp) ->  {
 
+            boolean showBody = false;
+
             if (th instanceof ResourceAccessException) {
 
                 boolean connTO = th.getMessage().toLowerCase().contains("connect timed out");
@@ -256,15 +260,25 @@ public class StrictRestClient {
                 }
 
             }
-            else if (th instanceof HttpMessageNotReadableException) {
 
-                if (getRestTemplateContext().bodyInterceptor != null) {
-                    // if we do not do this, the body of the original message is lost
-                    // and we will not be able to see it.
-                    log.error("Message cannot be converted to expected type: "
-                            + getRestTemplateContext().bodyInterceptor.getResponseBodyAsString()
-                            );
-                }
+            // In spring 5.1 instead of throwing an HttpMessageNotReadableException
+            // it throws a RestClientException with HttpMessageNotReadableException as cause
+            // or a RestClientException with no suitable HttpMessageConverter message.
+            else if (th instanceof HttpMessageNotReadableException
+                        ||  th.getCause() instanceof HttpMessageNotReadableException
+                    ) {
+                showBody = true;
+            }
+            else if (th instanceof RestClientException  &&  th.getMessage().contains("HttpMessageConverter")) {
+                showBody = true;
+            }
+
+            if (showBody && getRestTemplateContext().bodyInterceptor != null) {
+                // if we do not do this, the body of the original message is lost
+                // and we will not be able to see it.
+                log.error("Received message had problems with HttpReaders and/or MesageConverters, body => "
+                        + getRestTemplateContext().bodyInterceptor.getResponseBodyAsString()
+                        );
             }
 
             return rp;
