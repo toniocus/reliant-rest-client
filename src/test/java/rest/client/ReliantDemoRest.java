@@ -44,7 +44,7 @@ public class ReliantDemoRest {
         return this.jsonFactory.objectNode().put("status", "OK").put("timeout", timeout + "s");
     }
 
-    @RequestMapping(value = {"/noJson"}, method = {RequestMethod.GET})
+    @RequestMapping(value = {"/noJson"}, method = {RequestMethod.GET}, produces = "text/html")
     @ResponseBody
     public String noJson() throws InterruptedException {
         return "<root><data>This is not a JSON</data></root>";

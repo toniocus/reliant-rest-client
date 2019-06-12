@@ -28,6 +28,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import rest.client.basic.AnyMessageConverter;
 import rest.client.basic.ReliantRestClientBodyInterceptor;
 import rest.client.basic.ReliantRestClientClassifier;
 import rest.client.basic.ReliantRetryCallback;
@@ -213,6 +214,7 @@ public class StrictRestClient {
         RestTemplate rt = new RestTemplate(buffReqFactory);
         ReliantRestClientBodyInterceptor interceptor = new ReliantRestClientBodyInterceptor();
         rt.setErrorHandler(new StrictResponseErrorHandler());
+        rt.getMessageConverters().add(new AnyMessageConverter());
 
         // Add interceptor
         List<ClientHttpRequestInterceptor> interceptors = rt.getInterceptors();
