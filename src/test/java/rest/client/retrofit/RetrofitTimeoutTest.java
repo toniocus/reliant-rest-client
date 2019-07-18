@@ -56,11 +56,11 @@ public class RetrofitTimeoutTest extends Assert {
                     .readTimeout(10, TimeUnit.SECONDS)
                     .build();
 
-            TimeoutService toService = new Retrofit.Builder()
+            ConnectTimeoutService toService = new Retrofit.Builder()
                 .baseUrl("http://10.255.255.1/")
                 .client(cl)
                 .build()
-                .create(TimeoutService.class);
+                .create(ConnectTimeoutService.class);
 
             Response<ResponseBody> response = toService.timeout().execute();
             fail("No exception thrown");

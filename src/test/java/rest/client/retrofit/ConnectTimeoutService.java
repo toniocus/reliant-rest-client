@@ -9,7 +9,7 @@ import retrofit2.http.GET;
  * @author tonioc
  *
  */
-public interface TimeoutService {
+public interface ConnectTimeoutService {
 
     @GET("xxx")
     Call<ResponseBody>  timeout();
