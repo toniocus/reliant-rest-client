@@ -1,6 +1,6 @@
 package rest.client;
 
-import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
@@ -52,11 +52,11 @@ public class OkHttpTest extends Assert {
         try {
 
             OkHttpClient cl = this.client.newBuilder()
-                .connectTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .build();
 
-            Request request = new Request.Builder().url("http://localhost:9090/timeout/20").build();
+            Request request = new Request.Builder().url("http://localhost:9090/timeout/12").build();
 
             try (Response response = cl.newCall(request).execute()) {
 
@@ -70,10 +70,10 @@ public class OkHttpTest extends Assert {
 
             fail("No exception thrown");
         }
-        catch (IOException ex) {
+        catch (SocketTimeoutException ex) {
             stop = System.currentTimeMillis();
             System.out.println(ex.toString());
-            assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
+            assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("timeout"));
         }
 
         //assertTrue("Read time out",  (stop - start) < 500 * 2);
