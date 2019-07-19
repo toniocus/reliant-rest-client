@@ -1,3 +1,6 @@
+/*
+ *
+ */
 package rest.client.retrofit;
 
 import java.io.IOException;
@@ -19,7 +22,7 @@ import retrofit2.Converter;
  */
 public class JacksonResponseBodyConverterForTA<T> implements Converter<ResponseBody, T> {
     private final ObjectReader adapter;
-    private final boolean checkBody;
+    private final boolean cacheBodyInString;
 
     private static final Logger log = LoggerFactory
             .getLogger(JacksonResponseBodyConverterForTA.class);
@@ -28,11 +31,11 @@ public class JacksonResponseBodyConverterForTA<T> implements Converter<ResponseB
      * Instantiates a new jackson response body converter for TA.
      *
      * @param adapter the adapter
-     * @param checkBody the check body
+     * @param cacheBodyInString the cache body in string
      */
-    JacksonResponseBodyConverterForTA(final ObjectReader adapter, final boolean checkBody) {
+    JacksonResponseBodyConverterForTA(final ObjectReader adapter, final boolean cacheBodyInString) {
         this.adapter = adapter;
-        this.checkBody = checkBody;
+        this.cacheBodyInString = cacheBodyInString;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class JacksonResponseBodyConverterForTA<T> implements Converter<ResponseB
         String body = null;
 
         try {
-            if (this.checkBody) {
+            if (this.cacheBodyInString) {
                 body = value.string();
                 return this.adapter.readValue(body);
             }
@@ -51,7 +54,7 @@ public class JacksonResponseBodyConverterForTA<T> implements Converter<ResponseB
         }
         catch (JsonProcessingException ex) {
 
-            if (this.checkBody) {
+            if (this.cacheBodyInString) {
                 log.error("Error processing response body: " + body);
             }
 

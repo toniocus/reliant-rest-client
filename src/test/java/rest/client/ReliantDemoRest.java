@@ -50,6 +50,13 @@ public class ReliantDemoRest {
         return "<root><data>This is not a JSON</data></root>";
     }
 
+    @RequestMapping(value = {"/json"}, method = {RequestMethod.GET}, produces = "application/json")
+    @ResponseBody
+    public JsonNode json() throws InterruptedException {
+        return JsonNodeFactory.instance.objectNode()
+                .put("data", "This is a JSON body");
+    }
+
     @RequestMapping(value = {"/noJsonError"}, method = {RequestMethod.GET})
     @ResponseBody
     public ResponseEntity<String> noJsonError() throws InterruptedException {

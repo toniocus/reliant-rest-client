@@ -22,7 +22,7 @@ public final class JacksonConverterFactoryForTA extends Converter.Factory {
 
     private JacksonConverterFactory delegate;
     private ObjectMapper mapper = null;
-    private boolean checkJsonBody = false;
+    private boolean cacheBodyInString = false;
 
     /**
      * Instantiates a new jackson converter factory for TA.
@@ -32,41 +32,71 @@ public final class JacksonConverterFactoryForTA extends Converter.Factory {
 
     /**
      * Creates an instance of JacksonConverterFactoryForTA with default
-     * Jackson ObjectMapper, and checkBody = true;
+     * Jackson ObjectMapper, and cacheBodyInString = true;
      *
      * @return the jackson converter factory for TA
+     * @see #create(ObjectMapper, boolean)
      */
     public static JacksonConverterFactoryForTA create() {
+        return create(new ObjectMapper(), true);
+    }
+
+    /**
+     * Creates an instance of JacksonConverterFactoryForTA with default
+     * Jackson ObjectMapper, and cacheBodyInString = false;
+
+     *
+     * @return the jackson converter factory for TA
+     * @see #create(ObjectMapper, boolean)
+     */
+    public static JacksonConverterFactoryForTA createConverterForStreaming() {
         return create(new ObjectMapper(), false);
     }
 
     /**
      * Creates an instance of JacksonConverterFactoryForTA with given
-     * Jackson ObjectMapper, and checkBody = true;
+     * Jackson ObjectMapper, and cacheBodyInString = true;
      *
      *
-     * @param mapper the mapper
+     * @param mapper the mapper, if null default ObjectMapper will be used.
      * @return the jackson converter factory for TA
+     * @see #create(ObjectMapper, boolean)
      */
     public static JacksonConverterFactoryForTA create(final ObjectMapper mapper) {
+        return create(mapper, true);
+    }
+
+    /**
+     * Creates an instance of JacksonConverterFactoryForTA with given
+     * Jackson ObjectMapper, and cacheBodyInString = false;
+     *
+     *
+     * @param mapper the mapper, if null default ObjectMapper will be used.
+     * @return the jackson converter factory for TA
+     * @see #create(ObjectMapper, boolean)
+     */
+    public static JacksonConverterFactoryForTA createConverterForStreaming(final ObjectMapper mapper) {
         return create(mapper, false);
     }
 
     /**
      * Creates an instance of JacksonConverterFactoryForTA with given
-     * Jackson ObjectMapper and checkBody;
+     * Jackson ObjectMapper and cacheBodyInString.
      *
      * @param mapper the mapper if null default ObjectMapper will be created
-     * @param checkJsonBody the check json body, body is loaded in a String and message is
-     * reported if a JsonParse happens.
+     *
+     * @param cacheBodyInString if <b>true</b> this parameter makes the converter to store first the response in an String
+     * and then parse it from it, in this way in case of converter error we can show the received response in the log,
+     * if <b>false</b> ObjectMapper uses the response stream to read it and <b>no</b> information about the request
+     * can be fetched in case of parsing error.
+     *
      * @return the jackson converter factory for TA
      */
-    @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
-    public static JacksonConverterFactoryForTA create(final ObjectMapper mapper, final boolean checkJsonBody) {
+    public static JacksonConverterFactoryForTA create(final ObjectMapper mapper, final boolean cacheBodyInString) {
 
         JacksonConverterFactoryForTA conv = new JacksonConverterFactoryForTA();
         conv.mapper = (mapper == null ? new ObjectMapper() : mapper);
-        conv.checkJsonBody = checkJsonBody;
+        conv.cacheBodyInString = cacheBodyInString;
         conv.delegate = JacksonConverterFactory.create(conv.mapper);
 
         return conv;
@@ -77,7 +107,7 @@ public final class JacksonConverterFactoryForTA extends Converter.Factory {
         final Retrofit retrofit) {
       JavaType javaType = this.mapper.getTypeFactory().constructType(type);
       ObjectReader reader = this.mapper.readerFor(javaType);
-      return new JacksonResponseBodyConverterForTA<>(reader, this.checkJsonBody);
+      return new JacksonResponseBodyConverterForTA<>(reader, this.cacheBodyInString);
     }
 
     @Override
