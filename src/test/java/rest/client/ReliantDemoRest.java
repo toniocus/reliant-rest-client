@@ -84,5 +84,12 @@ public class ReliantDemoRest {
         return ResponseEntity.status(HttpStatus.PERMANENT_REDIRECT)
                 .body("<root><data>Redirect</data></root>");
     }
+    
+    @RequestMapping(value = {"/status500"}, method = {RequestMethod.GET})
+    @ResponseBody
+    public ResponseEntity<String> status500() {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("<root><data>Internal Server Error</data></root>");
+    }
 
 }

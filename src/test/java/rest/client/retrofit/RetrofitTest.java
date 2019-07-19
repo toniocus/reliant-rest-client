@@ -1,5 +1,6 @@
 package rest.client.retrofit;
 
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
@@ -63,7 +64,7 @@ public class RetrofitTest extends Assert {
 
                 @Override
                 public void log(final String msg) {
-                    log.info(msg);
+                    System.out.println("RF: " + msg);
                 }
 
             });
@@ -197,8 +198,20 @@ public class RetrofitTest extends Assert {
         System.out.println(execute.errorBody().string());
 
     }
-
+    
     @Test
+    public void testStatus500() throws Exception {
+
+        System.out.println("Running Status500... ");
+        RetrofitTestService service = getService(10, true);
+
+        Response<String> response = service.status500().execute();
+
+        assertFalse("Ok server error", response.isSuccessful());
+        assertEquals("HTTP Status Code 500", 500, response.code());
+    }
+
+	@Test
     public void testPostAck() throws Exception {
 
 

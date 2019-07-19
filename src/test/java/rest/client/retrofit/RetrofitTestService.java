@@ -30,6 +30,9 @@ public interface RetrofitTestService {
 
     @GET("status300")
     Call<String> status300();
+    
+    @GET("status500")
+    Call<String> status500();
 
     @POST("posts/ack")
     Call<JsonNode> postsAck(@Body JsonNode body);
