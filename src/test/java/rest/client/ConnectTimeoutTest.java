@@ -15,6 +15,7 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.web.client.RestClientException;
 
 import rest.client.strict.StrictRestClient;
+import rest.client.ta.TaRestTemplate;
 
 public class ConnectTimeoutTest extends Assert {
 
@@ -57,6 +58,31 @@ public class ConnectTimeoutTest extends Assert {
                     return bop;
                 }
             };
+
+            start = System.currentTimeMillis();
+            ResponseEntity<String> result = rrc
+                    .execute(rt -> rt.getForEntity("http://10.255.255.1", String.class));
+
+            System.out.println("Recived message: " +  result.getBody());
+        }
+        catch (Exception ex) {
+            stop = System.currentTimeMillis();
+            assertTrue("connect time out",  ex.getMessage().contains("connect timed out"));
+        }
+
+        assertTrue("Exception thrown", stop > 0);
+        assertTrue("Retries occured", (stop - start) > 2_000 * 3);
+
+    }
+
+    @Test
+    public void testConnectTimeoutTa() throws IOException, RestClientException, URISyntaxException {
+
+        long start = 0L, stop = 0L;
+
+        try {
+
+            TaRestTemplate rrc = new TaRestTemplate(10, 5);
 
             start = System.currentTimeMillis();
             ResponseEntity<String> result = rrc
