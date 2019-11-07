@@ -6,7 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The Class ConnectTimeoutPolicy.
+ * The Class TaRestRetryPolicy.
+ *
+ * <P>TODO an interface that can let us implement different retry policies,
+ * and of course let TaRestTemplate accept different policies.
  *
  * @author tonioc
  */
@@ -55,7 +58,7 @@ public class TaRestRetryPolicy implements Cloneable {
     }
 
     /**
-     * Init policy.
+     * Init policy, so it can start a new cycle.
      */
     public void initPolicy() {
         this.retry = 0;

@@ -11,13 +11,11 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import rest.client.strict.StrictRestClient;
-
 /**
  * TaRestTemplate a wrapper over RestTemplate with easy configurable timeouts and a standard
  * retry policy {@link TaRestRetryPolicy}, for HttpStatus 503 and connection timeout errors.
  *
- * <h2>Simple use:</h2>
+ * <h2>Simple use: (See also {@link #execute(Function)} for a nicer sample)</h2>
  * <pre>
  * {@code
  * ....
@@ -93,16 +91,24 @@ public class TaRestTemplate {
      *    // Construct with default timeouts
      *    TaRestTemplate taRest = new TaRestTemplate(15, 90);
      *
-     *    // call your restemplate method as a lamba.
+     *    // Using UriComponentBuilder from org.springframework.web.util
+     *    // to build a URL
+     *    // To generate: http://conciliator-batch.uat.ta.xom.dev.com/process/conciliate/vi?msisdn=XXXXX
+     *    UriComponents uriComp = UriComponentsBuilder
+     *         .fromHttpUrl("http://conciliator-batch.uat.ta.xom.dev.com")
+     *         .pathSegment("process", "conciliate", "v1")
+     *         .queryParam("msisdn", "0023459876")
+     *         .build();
+     *
+     *    // call your restemplate method as a lamba, using uriComp.toUri() to get the URL
      *    ResponseEntity<String> result = taRest
-     *          .execute(restTemplate -> restTemplate.getForEntity("http://localhost:9090/status100", String.class));
+     *          .execute(restTemplate -> restTemplate.getForEntity(uriComp.toUri(), String.class));
      *
      * ....
      * }
      * </pre>
      *
      *
-     * @see StrictRestClient StrictRestClient for the exceptions thrown by this method.
      * @param <T> the generic type
      * @param function the function receiving a {@link RestTemplate} argument and returning a
      *    ResponseEntity.
@@ -111,6 +117,9 @@ public class TaRestTemplate {
     public <T> ResponseEntity<T> execute(final Function<RestTemplate, ResponseEntity<T>> function) {
 
         Validate.notNull(function, "Function argument should not be null");
+
+        // Init retry policy in case the template is used more than once.
+        this.retryPolicy.initPolicy();
 
         do {
 
