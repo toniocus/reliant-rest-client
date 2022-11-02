@@ -1,5 +1,7 @@
 package rest.client;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +24,7 @@ import rest.client.models.ModelPerson;
 public class ReliantDemoRestMore {
 
     private static Logger log = LoggerFactory.getLogger(ReliantDemoRestMore.class);
-    private JsonNodeFactory jsonFactory = JsonNodeFactory.instance;
+    private final JsonNodeFactory jsonFactory = JsonNodeFactory.instance;
 
     @RequestMapping(value = {"/posts/ack"}, method = {RequestMethod.POST}, produces = "application/json")
     @ResponseBody
@@ -32,13 +34,21 @@ public class ReliantDemoRestMore {
                 .set("request", body);
     }
 
+    AtomicInteger counter = new AtomicInteger();
     @RequestMapping(value = {"/person/{name}"}, method = {RequestMethod.GET}, produces = "application/json")
     @ResponseBody
-    public ModelPerson getPerson(@PathVariable("name") final String name) {
+    public ModelPerson getPerson(@PathVariable("name") final String name) throws InterruptedException {
 
-        return new ModelPerson(name)
+        System.out.format("CALLS SIMULTANEOS %d %n", this.counter.incrementAndGet());
+
+        Thread.sleep(2000L);
+
+        ModelPerson person = new ModelPerson(name)
                 .addAddr("Superi", 2019)
                 .addAddr("Echeverria", 3361);
+
+        this.counter.decrementAndGet();
+        return person;
     }
 
     @RequestMapping(value = {"/person"}, method = {RequestMethod.POST}, produces = "application/json")

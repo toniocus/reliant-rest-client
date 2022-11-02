@@ -1,5 +1,6 @@
 package rest.client.ta;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.Validate;
@@ -38,8 +39,8 @@ public class TaRestTemplate {
 
     private static final Logger log = LoggerFactory.getLogger(TaRestTemplate.class);
 
-    private RestTemplate restTemplate;
-    private TaRestRetryPolicy retryPolicy = new TaRestRetryPolicy(-1, -1);
+    private final RestTemplate restTemplate;
+    private final TaRestRetryPolicy retryPolicy = new TaRestRetryPolicy(-1, -1);
     private int connectTO;
     private int readTO;
 
@@ -56,8 +57,8 @@ public class TaRestTemplate {
 
 
         this.restTemplate = new RestTemplateBuilder()
-                .setReadTimeout(readTimeoutSeconds*1000)
-                .setConnectTimeout(connectTimeoutSeconds*1000)
+                .setReadTimeout(Duration.ofSeconds(readTimeoutSeconds))
+                .setConnectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
                 .build();
     }
 

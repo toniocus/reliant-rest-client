@@ -1,9 +1,9 @@
 package rest.client;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -19,14 +19,14 @@ import rest.client.strict.StrictRestClient;
  *
  */
 @SpringBootTest
-public class StrictClientTest extends Assert {
+public class StrictClientTest extends Assertions {
 
-    @BeforeClass
+    @BeforeAll
     public static void start() {
         ReliantDemoApplication.main("");
     }
 
-    @AfterClass
+    @AfterAll
     public static void end() {
         ReliantDemoApplication.shutdown();
     }
@@ -55,7 +55,7 @@ public class StrictClientTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 500 * 2);
+        assertTrue("Read time out",  stop - start < 500 * 2);
     }
 
     /**
@@ -129,7 +129,7 @@ public class StrictClientTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 500 * 3);
+        assertTrue("Read time out",  stop - start < 500 * 3);
     }
 
     @Test
@@ -151,7 +151,11 @@ public class StrictClientTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 500 * 3);
+        assertTrue("Read time out",  stop - start < 500 * 3);
+    }
+
+    void assertTrue(final String msg, final boolean b) {
+        Assertions.assertTrue(b, msg);
     }
 
 }

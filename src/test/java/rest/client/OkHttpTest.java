@@ -3,10 +3,10 @@ package rest.client;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,16 +25,16 @@ import rest.client.strict.StrictRestClient;
  *
  */
 @SpringBootTest
-public class OkHttpTest extends Assert {
+public class OkHttpTest extends Assertions {
 
-    private OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient();
 
-    @BeforeClass
+    @BeforeAll
     public static void start() {
         ReliantDemoApplication.main("");
     }
 
-    @AfterClass
+    @AfterAll
     public static void end() {
         ReliantDemoApplication.shutdown();
     }
@@ -150,7 +150,7 @@ public class OkHttpTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 500 * 3);
+        assertTrue("Read time out",  stop - start < 500 * 3);
     }
 
     @Test
@@ -172,7 +172,11 @@ public class OkHttpTest extends Assert {
             assertTrue("Read timeout", ex.getMessage().toLowerCase().contains("read timed out"));
         }
 
-        assertTrue("Read time out",  (stop - start) < 500 * 3);
+        assertTrue("Read time out",  stop - start < 500 * 3);
+    }
+
+    void assertTrue(final String msg, final boolean b) {
+        Assertions.assertTrue(b, msg);
     }
 
 }

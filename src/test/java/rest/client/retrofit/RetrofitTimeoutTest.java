@@ -6,10 +6,10 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClientException;
 
 import okhttp3.OkHttpClient;
@@ -17,15 +17,15 @@ import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class RetrofitTimeoutTest extends Assert {
+public class RetrofitTimeoutTest extends Assertions {
 
     private static ServerSocket serverSocket;
 
-    private OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient();
 
     private static int port;
 
-    @BeforeClass
+    @BeforeAll
     public static void beforeClass() throws IOException {
         // server socket with single element backlog queue (1) and dynamicaly allocated port (0)
         serverSocket = new ServerSocket(0, 1);
@@ -35,7 +35,7 @@ public class RetrofitTimeoutTest extends Assert {
         new Socket().connect(serverSocket.getLocalSocketAddress());
     }
 
-    @AfterClass
+    @AfterAll
     public static void afterClass() throws IOException {
         // some cleanup
         if (serverSocket != null && !serverSocket.isClosed()) {

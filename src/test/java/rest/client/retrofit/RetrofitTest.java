@@ -1,13 +1,13 @@
 package rest.client.retrofit;
 
-import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,12 +17,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
 import rest.client.ReliantDemoApplication;
 import rest.client.models.ModelPerson;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -33,17 +35,27 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
  *
  */
 @SpringBootTest
-public class RetrofitTest extends Assert {
+public class RetrofitTest extends Assertions {
 
     private static final Logger log = LoggerFactory.getLogger(RetrofitTest.class);
-    private OkHttpClient singletonHttpClient = new OkHttpClient();
+    private static OkHttpClient singletonHttpClient;
+    private static OkHttpListener listener = new OkHttpListener();
 
-    @BeforeClass
+    @BeforeAll
     public static void start() {
+
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequestsPerHost(10);
+
+        singletonHttpClient = new OkHttpClient.Builder()
+                .dispatcher(dispatcher)
+                .eventListener(listener)
+                .build();
+
         ReliantDemoApplication.main("");
     }
 
-    @AfterClass
+    @AfterAll
     public static void end() {
         ReliantDemoApplication.shutdown();
     }
@@ -60,16 +72,9 @@ public class RetrofitTest extends Assert {
 
         if (logHttp) {
 
-            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
-
-                @Override
-                public void log(final String msg) {
-                    System.out.println("RF: " + msg);
-                }
-
-            });
-
-            interceptor.level(Level.BODY);
+            HttpLoggingInterceptor interceptor =
+                    new HttpLoggingInterceptor(msg -> System.out.println("RF: " + msg));
+            interceptor.level(Level.BASIC);
 
             client = this.singletonHttpClient.newBuilder()
                     .connectTimeout(10, TimeUnit.SECONDS)
@@ -198,7 +203,7 @@ public class RetrofitTest extends Assert {
         System.out.println(execute.errorBody().string());
 
     }
-    
+
     @Test
     public void testStatus500() throws Exception {
 
@@ -208,7 +213,7 @@ public class RetrofitTest extends Assert {
         Response<String> response = service.status500().execute();
 
         assertFalse("Ok server error", response.isSuccessful());
-        assertEquals("HTTP Status Code 500", 500, response.code());
+        assertEquals(500, response.code(), "HTTP Status Code 500");
     }
 
 	@Test
@@ -246,11 +251,70 @@ public class RetrofitTest extends Assert {
         System.out.println("Running getPerson... ");
         RetrofitTestService service = getService(30, true);
 
-        Response<ModelPerson> execute = service.getPersonModel("Andres").execute();
+        Response<ModelPerson> execute = service
+                .getPersonModel("Andres").execute();
 
         assertTrue("Ok request", execute.isSuccessful());
         System.out.println(execute.body());
 
+    }
+
+    @Test
+    public void testGetPersonModelAsync() throws Exception {
+
+        int max=200;
+        System.out.println("Running getPerson... ");
+        RetrofitTestService service = getService(30, true);
+
+        CountDownLatch countDownLatch = new CountDownLatch(200);
+
+        for (int i = 0; i < 200; i++ ) {
+
+            if (listener.getCounter() >= 10) {
+                log.info("********* WAITING");
+                i--;
+                Thread.sleep(500);
+                continue;
+            }
+
+            service.getPersonModel("Andres " + (i+1)).enqueue(new Callback<ModelPerson>() {
+
+                @Override
+                public void onResponse(final Call<ModelPerson> call, final Response<ModelPerson> response) {
+                    if (response.isSuccessful()) {
+                        String tname=Thread.currentThread().getName();
+                        log.info("{} Success call to person {}", call.request()
+                                , tname.substring(tname.length()-10)
+                                );
+                    }
+                    else {
+                        log.info("Error in call {}", response.code());
+                    }
+
+                    countDownLatch.countDown();
+                }
+
+                @Override
+                public void onFailure(final Call<ModelPerson> call, final Throwable t) {
+                    log.error("Error", t);
+                    countDownLatch.countDown();
+                }
+            });
+        }
+
+        countDownLatch.await();
+    }
+
+    @Test
+    public void testGetPersonModelSync() throws Exception {
+
+        System.out.println("Running getPerson... ");
+        RetrofitTestService service = getService(30, true);
+
+        for (int i = 0; i < 200; i++ ) {
+            Response<ModelPerson> execute = service.getPersonModel("Andres " + (i+1)).execute();
+            log.info("Success call {}", i);
+        }
     }
 
     @Test
@@ -268,6 +332,14 @@ public class RetrofitTest extends Assert {
         assertTrue("Ok request", execute.isSuccessful());
         System.out.println(execute.body());
 
+    }
+
+    void assertTrue(final String msg, final boolean b) {
+        Assertions.assertTrue(b, msg);
+    }
+
+    void assertFalse(final String msg, final boolean b) {
+        Assertions.assertFalse(b, msg);
     }
 
 }

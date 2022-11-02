@@ -2,10 +2,10 @@ package rest.client.ta;
 
 import java.net.SocketTimeoutException;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
@@ -19,14 +19,14 @@ import rest.client.ReliantDemoApplication;
  *
  */
 @SpringBootTest
-public class TaRestClientTest extends Assert {
+public class TaRestClientTest extends Assertions {
 
-    @BeforeClass
+    @BeforeAll
     public static void start() {
         ReliantDemoApplication.main("");
     }
 
-    @AfterClass
+    @AfterAll
     public static void end() {
         ReliantDemoApplication.shutdown();
     }
@@ -51,7 +51,7 @@ public class TaRestClientTest extends Assert {
         }
         catch (ResourceAccessException ex) {
             stop = System.currentTimeMillis();
-            assertTrue("timeout Exception", ex.getCause() instanceof SocketTimeoutException);
+            assertTrue(ex.getCause() instanceof SocketTimeoutException, "Timeout Exception");
         }
     }
 
@@ -72,9 +72,10 @@ public class TaRestClientTest extends Assert {
             fail("No exception thrown");
         }
         catch (Exception ex) {
-            assertTrue("exception", ex instanceof HttpServerErrorException);
-            assertEquals("503", 503, ((HttpServerErrorException) ex).getRawStatusCode());
+            assertTrue(ex instanceof HttpServerErrorException, "exception");
+            assertEquals(503, ((HttpServerErrorException) ex).getRawStatusCode(), "503");
         }
     }
+
 
 }

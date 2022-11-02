@@ -5,10 +5,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URISyntaxException;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.backoff.BackOffPolicy;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
@@ -17,13 +17,13 @@ import org.springframework.web.client.RestClientException;
 import rest.client.strict.StrictRestClient;
 import rest.client.ta.TaRestTemplate;
 
-public class ConnectTimeoutTest extends Assert {
+public class ConnectTimeoutTest extends Assertions {
 
     private static ServerSocket serverSocket;
 
     private static int port;
 
-    @BeforeClass
+    @BeforeAll
     public static void beforeClass() throws IOException {
         // server socket with single element backlog queue (1) and dynamicaly allocated port (0)
         serverSocket = new ServerSocket(0, 1);
@@ -33,7 +33,7 @@ public class ConnectTimeoutTest extends Assert {
         new Socket().connect(serverSocket.getLocalSocketAddress());
     }
 
-    @AfterClass
+    @AfterAll
     public static void afterClass() throws IOException {
         // some cleanup
         if (serverSocket != null && !serverSocket.isClosed()) {
@@ -43,7 +43,7 @@ public class ConnectTimeoutTest extends Assert {
 
     @Test
     //@Ignore("Ignored because the time it takes, comment out to try")
-    public void testConnectTimeout() throws IOException, RestClientException, URISyntaxException {
+    void testConnectTimeout() throws IOException, RestClientException, URISyntaxException {
 
         long start = 0L, stop = 0L;
 
@@ -71,12 +71,12 @@ public class ConnectTimeoutTest extends Assert {
         }
 
         assertTrue("Exception thrown", stop > 0);
-        assertTrue("Retries occured", (stop - start) > 2_000 * 3);
+        assertTrue("Retries occured", stop - start > 2_000 * 3);
 
     }
 
     @Test
-    public void testConnectTimeoutTa() throws IOException, RestClientException, URISyntaxException {
+    void testConnectTimeoutTa() throws IOException, RestClientException, URISyntaxException {
 
         long start = 0L, stop = 0L;
 
@@ -96,8 +96,12 @@ public class ConnectTimeoutTest extends Assert {
         }
 
         assertTrue("Exception thrown", stop > 0);
-        assertTrue("Retries occured", (stop - start) > 2_000 * 3);
+        assertTrue("Retries occured", stop - start > 2_000 * 3);
 
+    }
+
+    void assertTrue(final String msg, final boolean b) {
+        Assertions.assertTrue(b, msg);
     }
 
 }
